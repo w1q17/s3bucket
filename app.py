@@ -142,18 +142,14 @@ def files():
     
     return render_template("files.html", files=files_list)
 
-@app.route("/download/<bucket>/<path:object_name>")
-def download_file(bucket, object_name):
-    """
-    Генерация предварительно подписанного URL для получения объекта из Minio.
-    """
+@app.route("/files/raw/<path:file_id>")
+def get_raw_file(file_id):
+    if "username" not in session:
+        return "Unauthorized", 401
+    
+    bucket_name = session["username"].split("@")[0].lower()
     try:
-        # Увеличиваем время жизни URL до 24 часов для видео
-        url = minio_client.presigned_get_object(
-            bucket, 
-            object_name,
-            expires=timedelta(hours=24)
-        )
+        url = minio_client.presigned_get_object(bucket_name, file_id, expires=timedelta(hours=24))
         return redirect(url)
     except Exception as e:
         return f"Ошибка при получении файла: {e}", 500
