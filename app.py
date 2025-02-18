@@ -13,7 +13,7 @@ app = Flask(__name__)
 app.secret_key = os.getenv("FLASK_SECRET_KEY", "supersecretkey")
 
 # Чтение конфигурации Minio из .env
-MINIO_ENDPOINT = os.getenv("MINIO_ENDPOINT")
+MINIO_HOST = os.getenv("MINIO_HOST")
 MINIO_ACCESS_KEY = os.getenv("MINIO_ACCESS_KEY")
 MINIO_SECRET_KEY = os.getenv("MINIO_SECRET_KEY")
 MINIO_SECURE = os.getenv("MINIO_SECURE", "false").lower() == "true"
@@ -24,7 +24,7 @@ LDAP_BASE_DN = os.getenv("LDAP_BASE_DN")
 
 # Инициализация клиента Minio
 minio_client = Minio(
-    MINIO_ENDPOINT,
+    MINIO_HOST,
     access_key=MINIO_ACCESS_KEY,
     secret_key=MINIO_SECRET_KEY,
     secure=MINIO_SECURE
