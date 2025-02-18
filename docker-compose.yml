@@ -7,11 +7,9 @@ services:
       - .env
     ports:
       - "5000:5000"
-    depends_on:
-      - minio
     environment:
-      FLASK_APP: app.py
-      FLASK_RUN_HOST: 0.0.0.0
+      - FLASK_APP=app.py
+      - FLASK_ENV=production
     volumes:
       - .:/app
     command: gunicorn --bind 0.0.0.0:5000 app:app
