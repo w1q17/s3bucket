@@ -90,15 +90,15 @@
                 {% for file in files %}
                 <div class="col">
                     <div class="card h-100">
-                        <div class="video-wrapper">
-                            <video
+                        <div class="video-wrapper" style="position: relative;">
+                            <video 
                                 id="video-{{ file.raw_id }}"
-                                class="plyr-video"
+                                class="video-js vjs-default-skin"
                                 controls
                                 preload="metadata"
                                 controlsList="nodownload"
-                                oncontextmenu="return false;">
-                                <source src="/files/raw/{{ file.raw_id }}" type="video/mp4" />
+                                oncontextmenu="return false;"
+                                data-file-url="/files/raw/{{ file.raw_id }}">
                             </video>
                         </div>
                         <div class="card-body d-flex flex-column">
@@ -106,12 +106,14 @@
                                 {{ file.display_filename }}
                             </h5>
                             <p class="card-text">
-                                <small class="text-muted">Загружен: {{ file.upload_date.strftime('%d.%m.%Y %H:%M') }}</small>
+                                <small class="text-muted">Загружен: {{ file.last_modified.strftime('%d.%m.%Y %H:%M') }}</small>
                             </p>
                             {% if file.rejection_reason %}
                                 <div class="alert alert-danger">
                                     <p class="mb-1">Причина удаления: {{ file.rejection_reason }}</p>
-                                    <p class="mb-0"><small>Файл будет автоматически удалён: {{ file.auto_delete_date }}</small></p>
+                                    <p class="mb-0">
+                                        <small>Файл будет автоматически удалён: {{ file.auto_delete_date }}</small>
+                                    </p>
                                 </div>
                             {% endif %}
                             <div class="d-flex justify-content-start mt-auto">
@@ -163,6 +165,8 @@
 <script src="https://cdn.plyr.io/3.7.2/plyr.polyfilled.js"></script>
 <!-- Подключение Vue.js, если понадобится для дальнейшей логики -->
 <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
+<!-- Подключение Video.js -->
+<script src="https://vjs.zencdn.net/7.11.4/video.js"></script>
 <script>
     // Инициализация Plyr для всех видео с классом .plyr-video
     document.addEventListener('DOMContentLoaded', () => {
@@ -305,5 +309,69 @@
             }, 3000);
         }
     });
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // Ищем все видео с заданным data-file-url
+        const videos = document.querySelectorAll('video.video-js[data-file-url]');
+        videos.forEach(video => {
+            const fileUrl = video.getAttribute('data-file-url');
+            loadVideoUsingXHR(video, fileUrl);
+        });
+    });
+
+    function loadVideoUsingXHR(video, url) {
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET", url, true);
+        xhr.responseType = "blob";
+
+        // Создаем оверлей для показа прогресса загрузки
+        let progressOverlay = document.createElement("div");
+        progressOverlay.style.position = "absolute";
+        progressOverlay.style.top = "0";
+        progressOverlay.style.left = "0";
+        progressOverlay.style.width = "100%";
+        progressOverlay.style.height = "100%";
+        progressOverlay.style.background = "rgba(0, 0, 0, 0.5)";
+        progressOverlay.style.display = "flex";
+        progressOverlay.style.alignItems = "center";
+        progressOverlay.style.justifyContent = "center";
+        progressOverlay.style.color = "#fff";
+        progressOverlay.style.fontSize = "18px";
+        progressOverlay.style.transition = "opacity 0.5s ease-out";
+        progressOverlay.innerText = "0%";
+        video.parentElement.appendChild(progressOverlay);
+
+        xhr.onprogress = function(e) {
+            if (e.lengthComputable) {
+                let percent = Math.round((e.loaded / e.total) * 100);
+                progressOverlay.innerText = percent + "%";
+            }
+        };
+
+        xhr.onload = function() {
+            if (xhr.status === 200) {
+                var blob = xhr.response;
+                var blobUrl = URL.createObjectURL(blob);
+                video.src = blobUrl;
+
+                // Инициализируем Video.js для данного элемента
+                videojs(video);
+
+                // Постепенно скрываем оверлей прогресса
+                progressOverlay.style.opacity = "0";
+                setTimeout(function() {
+                    progressOverlay.remove();
+                }, 500);
+            } else {
+                progressOverlay.innerText = "Ошибка загрузки";
+            }
+        };
+
+        xhr.onerror = function() {
+            progressOverlay.innerText = "Ошибка загрузки";
+        };
+
+        xhr.send();
+    }
 </script>
 {% endblock %} 
