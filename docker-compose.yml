@@ -14,3 +14,4 @@ services:
       FLASK_RUN_HOST: 0.0.0.0
     volumes:
       - .:/app
+    command: gunicorn --bind 0.0.0.0:5000 app:app

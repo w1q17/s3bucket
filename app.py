@@ -5,6 +5,7 @@ from flask import Flask, render_template, request, redirect, url_for, session, f
 from dotenv import load_dotenv
 from minio import Minio
 from minio.error import S3Error
+from datetime import datetime, timedelta
 
 # Загрузка переменных окружения из файла .env
 load_dotenv()
@@ -141,17 +142,21 @@ def files():
     
     return render_template("files.html", files=files_list)
 
-@app.route("/download/<bucket>/<object_name>")
+@app.route("/download/<bucket>/<path:object_name>")
 def download_file(bucket, object_name):
     """
     Генерация предварительно подписанного URL для получения объекта из Minio.
-    Ссылка используется для потокового воспроизведения видео.
     """
     try:
-        url = minio_client.presigned_get_object(bucket, object_name)
+        # Увеличиваем время жизни URL до 24 часов для видео
+        url = minio_client.presigned_get_object(
+            bucket, 
+            object_name,
+            expires=timedelta(hours=24)
+        )
         return redirect(url)
     except Exception as e:
-        return f"Ошибка при получении файла: {e}"
+        return f"Ошибка при получении файла: {e}", 500
 
 @app.route("/logout")
 def logout():

@@ -42,7 +42,7 @@
                             width="640" 
                             height="360"
                             data-setup='{"fluid": true}'>
-                            <source src="{{ url_for('download_file', bucket=session.username.split('@')[0].lower(), object_name=file.object_name) }}" type="video/mp4">
+                            <source src="/files/raw/{{ file.raw_id }}" type="video/mp4">
                             Ваш браузер не поддерживает HTML5 видео.
                         </video>
                     </div>
