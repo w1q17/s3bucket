@@ -162,4 +162,6 @@ def logout():
     return redirect(url_for("login"))
 
 if __name__ == "__main__":
-    app.run(debug=True) 
+    print("WARNING: This is a development server. Do not use it in a production deployment.")
+    print("Use a production WSGI server (like Gunicorn) instead.")
+    app.run(debug=True, host='0.0.0.0') 
