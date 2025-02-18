@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}TPU Videofiles{% endblock %}</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Video.js CSS -->
+    <link href="https://vjs.zencdn.net/7.11.4/video-js.css" rel="stylesheet">
+    <style>
+        body {
+            background: #f8f9fa;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .main-container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+        .card {
+            border-radius: 1rem;
+            width: 100%;
+        }
+        .login-card {
+            max-width: 400px;
+        }
+        .files-card {
+            max-width: 800px;
+        }
+        .video-wrapper {
+            margin-bottom: 2rem;
+        }
+        .upload-area {
+            border: 2px dashed #dee2e6;
+            border-radius: 0.5rem;
+            padding: 2rem;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .upload-area.dragover {
+            background-color: #e9ecef;
+            border-color: #0d6efd;
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    {% if session.username %}
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('files') }}">TPU Videofiles</a>
+            <div class="navbar-nav ms-auto">
+                <span class="nav-item nav-link text-light">{{ session.username }}</span>
+                <a class="nav-link" href="{{ url_for('logout') }}">Выйти</a>
+            </div>
+        </div>
+    </nav>
+    {% endif %}
+
+    <div class="main-container">
+        {% block content %}{% endblock %}
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Video.js -->
+    <script src="https://vjs.zencdn.net/7.11.4/video.js"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html> 

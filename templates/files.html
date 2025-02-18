@@ -1,98 +1,104 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <title>Файлы пользователя</title>
-    <!-- Подключение Video.js CSS -->
-    <link href="https://vjs.zencdn.net/7.11.4/video-js.css" rel="stylesheet" />
-    <style>
-        .drop-area {
-            border: 2px dashed #ccc;
-            border-radius: 5px;
-            padding: 20px;
-            text-align: center;
-            cursor: pointer;
-        }
-        .video-wrapper {
-            margin-bottom: 20px;
-        }
-    </style>
-</head>
-<body>
-    <h2>Добро пожаловать, {{ session.username }}</h2>
-    <p><a href="{{ url_for('logout') }}">Выйти</a></p>
-    
-    {% with messages = get_flashed_messages() %}
-        {% if messages %}
-            <ul style="color: green;">
-                {% for message in messages %}
-                    <li>{{ message }}</li>
-                {% endfor %}
-            </ul>
-        {% endif %}
-    {% endwith %}
-    
-    <!-- Форма загрузки видео -->
-    <form id="uploadForm" method="post" enctype="multipart/form-data">
-        <div id="upload-zone" class="drop-area mb-4">
-            <div class="cloud-icon" style="font-size: 48px; margin-bottom: 10px;">☁️</div>
-            <p>Перетащите видео сюда или нажмите для выбора файла</p>
-            <input type="file" id="fileInput" name="file" accept="video/*" style="display: none;">
-        </div>
-        <button type="submit">Загрузить видео</button>
-    </form>
-    
-    <!-- Прогресс-бар (резерв, функционал можно доработать) -->
-    <div class="progress mb-4" id="progressContainer" style="display: none;">
-        <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%;">0%</div>
-    </div>
-    
-    <div id="uploadStatus" class="mb-4"></div>
-    
-    <div class="files-container p-4">
-        {% if files and files|length > 0 %}
-            <h3>Загруженные видео:</h3>
-            {% for file in files %}
-                <div class="video-wrapper">
-                    <video id="video-{{ file.object_name }}" class="video-js vjs-default-skin" controls preload="metadata" controlsList="nodownload" oncontextmenu="return false;" width="640" height="360"
-                        data-setup='{"fluid": true, "controlBar": { "children": ["playToggle", "volumePanel", "currentTimeDisplay", "timeDivider", "durationDisplay", "progressControl", "fullscreenToggle"] }}'>
-                        <source src="{{ url_for('download_file', bucket=session.username.split('@')[0].lower(), object_name=file.object_name) }}" type="video/mp4">
-                        Ваш браузер не поддерживает HTML5 видео.
-                    </video>
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card shadow files-card">
+    <div class="card-body p-5">
+        <h2 class="text-center mb-4">Управление видеофайлами</h2>
+
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <div class="alert alert-info" role="alert">
+                    {% for message in messages %}
+                        {{ message }}
+                    {% endfor %}
                 </div>
-            {% endfor %}
-        {% else %}
-            <p>Видео не найдены.</p>
-        {% endif %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- Область загрузки файлов -->
+        <div class="upload-area" id="drop-area">
+            <form method="post" enctype="multipart/form-data" id="upload-form">
+                <p class="mb-3">Перетащите видеофайл сюда или нажмите для выбора</p>
+                <input type="file" id="fileInput" name="file" accept="video/*" class="d-none">
+                <button type="button" class="btn btn-primary" onclick="document.getElementById('fileInput').click()">
+                    Выбрать файл
+                </button>
+            </form>
+        </div>
+
+        <!-- Список загруженных файлов -->
+        <div class="files-container">
+            {% if files and files|length > 0 %}
+                <h3 class="mb-4">Загруженные видео:</h3>
+                {% for file in files %}
+                    <div class="video-wrapper">
+                        <video 
+                            id="video-{{ file.object_name }}" 
+                            class="video-js vjs-default-skin" 
+                            controls 
+                            preload="metadata" 
+                            controlsList="nodownload" 
+                            oncontextmenu="return false;" 
+                            width="640" 
+                            height="360"
+                            data-setup='{"fluid": true}'>
+                            <source src="{{ url_for('download_file', bucket=session.username.split('@')[0].lower(), object_name=file.object_name) }}" type="video/mp4">
+                            Ваш браузер не поддерживает HTML5 видео.
+                        </video>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p class="text-center text-muted">Видео не найдены.</p>
+            {% endif %}
+        </div>
     </div>
-    
-    <!-- Подключение Video.js JS -->
-    <script src="https://vjs.zencdn.net/7.11.4/video.js"></script>
-    <script>
-        // Обработка клика для открытия окна выбора файла
-        const uploadZone = document.getElementById("upload-zone");
-        const fileInput = document.getElementById("fileInput");
-        uploadZone.addEventListener("click", function() {
-            fileInput.click();
-        });
-        
-        // Обработка перетаскивания (drag'n'drop)
-        uploadZone.addEventListener("dragover", function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            uploadZone.style.backgroundColor = "#e1e7f0";
-        });
-        uploadZone.addEventListener("dragleave", function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            uploadZone.style.backgroundColor = "";
-        });
-        uploadZone.addEventListener("drop", function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            fileInput.files = e.dataTransfer.files;
-            document.getElementById("uploadForm").submit();
-        });
-    </script>
-</body>
-</html> 
+</div>
+
+{% block extra_js %}
+<script>
+    // Drag and drop functionality
+    const dropArea = document.getElementById('drop-area');
+    const fileInput = document.getElementById('fileInput');
+    const uploadForm = document.getElementById('upload-form');
+
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        dropArea.addEventListener(eventName, preventDefaults, false);
+    });
+
+    function preventDefaults (e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+
+    ['dragenter', 'dragover'].forEach(eventName => {
+        dropArea.addEventListener(eventName, highlight, false);
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+        dropArea.addEventListener(eventName, unhighlight, false);
+    });
+
+    function highlight(e) {
+        dropArea.classList.add('dragover');
+    }
+
+    function unhighlight(e) {
+        dropArea.classList.remove('dragover');
+    }
+
+    dropArea.addEventListener('drop', handleDrop, false);
+
+    function handleDrop(e) {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        fileInput.files = files;
+        uploadForm.submit();
+    }
+
+    // Автоматическая отправка формы при выборе файла
+    fileInput.addEventListener('change', () => {
+        uploadForm.submit();
+    });
+</script>
+{% endblock %}
+{% endblock %} 
